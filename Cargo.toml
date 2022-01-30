@@ -4,3 +4,22 @@ members = [
     "app",
     "xiao2040-bsp",
 ]
+
+[profile.dev]
+codegen-units = 1
+debug = 2
+debug-assertions = true
+opt-level = "z"
+overflow-checks = true
+
+# cargo build/run --release
+[profile.release]
+codegen-units = 1
+debug = 2
+debug-assertions = true
+lto = 'fat'
+opt-level = "z"
+overflow-checks = false
+
+[patch.crates-io]
+rp2040-boot2 = { path = "./rp2040-boot2" }

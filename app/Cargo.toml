@@ -16,3 +16,9 @@ defmt-rtt = "^0.3"
 panic-probe = { version = "^0.3", features = ["print-defmt"] }
 
 xiao2040-bsp = { path = "../xiao2040-bsp" }
+
+nb = "^1.0"
+panic-halt= "^0.2"
+smart-leds = "^0.3"
+pio = "^0.1"
+ws2812-pio = { git = "https://github.com/ithinuel/ws2812-pio-rs", rev = "83fc175fd99f230e477f6fc4a0802e29fd8dcd6f" }

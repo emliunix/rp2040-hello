@@ -1,0 +1,15 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Probe_rs XIAO2040",
+            "preLaunchTask": "build XIAO2040",
+            "type": "probe-rs-debug",
+            "request": "launch",
+            "programBinary": "${workspaceRoot}/target/thumbv6m-none-eabi/release/rp2040-app",
+            "chip": "rp2040",
+            "rttEnabled": true,
+            "connectUnderReset": true,
+        }
+    ]
+}
