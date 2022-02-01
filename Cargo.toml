@@ -21,6 +21,3 @@ debug-assertions = true
 lto = 'fat'
 opt-level = "z"
 overflow-checks = false
-
-[patch.crates-io]
-rp2040-boot2 = { path = "./rp2040-boot2" }
