@@ -1,0 +1,21 @@
+[default.probe]
+protocol = "Swd"
+
+[default.flashing]
+enabled = false
+
+[default.reset]
+enabled = true
+halt_afterwards = true
+
+[default.general]
+chip = "rp2040"
+log_level = "debug"
+connect_under_reset = true
+
+[default.rtt]
+enabled = true
+
+[default.gdb]
+enabled = true
+gdb_connection_string = "127.0.0.1:3333"

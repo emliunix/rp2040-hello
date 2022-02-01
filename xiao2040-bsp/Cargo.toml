@@ -11,7 +11,7 @@ cortex-m-rt = { version = "^0.7", optional = true }
 embedded-time = "^0.12"
 
 rp2040-hal = { version="0.3.0", features=["rt"] }
-rp2040-boot2 = { version = "0.2.0", optional = true }
+rp2040-boot2 = { version = "0.2.0", optional = true, features=["assemble"] }
 
 [features]
 default = ["boot2", "rt"]

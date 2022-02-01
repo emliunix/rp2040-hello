@@ -3,6 +3,7 @@
 members = [
     "app",
     "xiao2040-bsp",
+    "rp2040-boot2",
 ]
 
 [profile.dev]
