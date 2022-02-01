@@ -36,3 +36,12 @@ So it's not compatible with gd25q16 nor w25q080.
 1. revert write status commands in the gd25q64 boot2 code.
 2. (optional) issue HPM command to enable HPM (High Performance Mode).
 
+And it's not working.
+
+In the debug session, it successfully reached the end of boot2, and is about to jump to the main code. Then it crashes with DFSR = 0x001 - an alignment issue.
+
+The datasheets say that both chips requires a0 = 0 for 0xa7 read command. But I guess maybe it's actually not required on gd25q64.
+
+## Summary
+
+I'll continue with w25q080 boot2.
