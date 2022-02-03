@@ -10,8 +10,8 @@ halt_afterwards = true
 
 [default.general]
 chip = "rp2040"
-log_level = "debug"
-connect_under_reset = true
+log_level = "info"
+connect_under_reset = false
 
 [default.rtt]
 enabled = true

@@ -100,6 +100,10 @@ fn main() -> ! {
         ws.write(brightness(once(wheel(n)), 32)).unwrap();
         n = n.wrapping_add(1);
 
+        if n % 1000 == 0 {
+            defmt::info!("n = {}", n);
+        }
+
         delay.start(1.milliseconds());
         let _ = nb::block!(delay.wait());
     }
