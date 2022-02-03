@@ -6,6 +6,8 @@
 #![no_std]
 #![no_main]
 
+use cortex_m::prelude::_embedded_hal_timer_CountDown;
+use embedded_time::duration::Extensions;
 use xiao2040_bsp as bsp;
 use bsp::{
     hal::{
@@ -13,16 +15,27 @@ use bsp::{
         pac,
         timer::Timer,
         watchdog::Watchdog,
-        Sio, gpio::{PinId, PinMode, ValidPinMode},
+        Sio, gpio::{PinId, PinMode, ValidPinMode, PushPullOutput, DynPin, Pin},
     },
     Pins, XOSC_CRYSTAL_FREQ,
 };
-use core::convert::Infallible;
+use core::{convert::Infallible, fmt::Write};
 use cortex_m_rt::entry;
 use embedded_hal::digital::v2::OutputPin;
 use defmt;
 use defmt_rtt as _;
 use panic_probe as _;
+
+trait AsDynPin {
+    fn as_dyn(self: Self) -> DynPin;
+}
+
+impl <I: PinId, M: PinMode + ValidPinMode<I>> AsDynPin for Pin<I, M> {
+    #[inline]
+    fn as_dyn(self: Self) -> DynPin {
+        self.into()
+    }
+}
 
 #[entry]
 fn main() -> ! {
@@ -55,31 +68,25 @@ fn main() -> ! {
     let timer = Timer::new(pac.TIMER, &mut pac.RESETS);
     let mut delay = timer.count_down();
 
-    let mut rgb_r = pins.rgb_r.into_push_pull_output();
-    let mut rgb_g = pins.rgb_g.into_push_pull_output();
-    let mut rgb_b = pins.rgb_b.into_push_pull_output();
-
-    setup_user_led(&pins).unwrap();
+    setup_led(
+        pins.rgb_r.into_push_pull_output().as_dyn(),
+        pins.rgb_g.into_push_pull_output().as_dyn(),
+        pins.rgb_b.into_push_pull_output().as_dyn(),
+    ).unwrap();
 
     loop {
-         
+        defmt::info!("tick");
+        delay.start(1_u32.seconds());
+        nb::block!(delay.wait());
     }
 }
 
-type GpioPin<A, B> = bsp::hal::gpio::pin::Pin<A, B>;
-
-fn pins<A: PinId, B: PinMode + ValidPinMode<A>>(r: &GpioPin<A, B>, g: &GpioPin<A, B>, b: &GpioPin<A, B>) {
-    setup_user_led(r.into_push_pull_output(), g.into_push_pull_output(), b.into_push_pull_output())?
-}
-
-fn setup_user_led<P, E>(mut r: P, mut g: P, mut b: P) -> Result<(), E>
+fn setup_led<P, E>(mut r: P, mut g: P, mut b: P) -> Result<(), E>
 where
-    P: OutputPin<Error = E>,
-    E: From<Infallible>
+    P: OutputPin<Error = E>
 {
     r.set_low()?;
     g.set_high()?;
     b.set_high()?;
-
     Ok(())
 }
