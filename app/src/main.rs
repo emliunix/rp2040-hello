@@ -6,26 +6,23 @@
 #![no_std]
 #![no_main]
 
-use xiao2040_bsp::{
+use xiao2040_bsp as bsp;
+use bsp::{
     hal::{
-        clocks::{init_clocks_and_plls, Clock},
+        clocks::{init_clocks_and_plls},
         pac,
-        pio::PIOExt,
         timer::Timer,
         watchdog::Watchdog,
-        Sio, gpio::OutputDriveStrength,
+        Sio, gpio::{PinId, PinMode, ValidPinMode},
     },
     Pins, XOSC_CRYSTAL_FREQ,
 };
-use core::iter::once;
+use core::convert::Infallible;
 use cortex_m_rt::entry;
-use embedded_hal::{timer::CountDown, digital::v2::OutputPin};
-use embedded_time::duration::Extensions;
-use panic_halt as _;
-use smart_leds::{brightness, SmartLedsWrite, RGB8};
-use ws2812_pio::Ws2812;
+use embedded_hal::digital::v2::OutputPin;
 use defmt;
 use defmt_rtt as _;
+use panic_probe as _;
 
 #[entry]
 fn main() -> ! {
@@ -55,74 +52,34 @@ fn main() -> ! {
 
     defmt::info!("Board initialized...");
 
+    let timer = Timer::new(pac.TIMER, &mut pac.RESETS);
+    let mut delay = timer.count_down();
+
     let mut rgb_r = pins.rgb_r.into_push_pull_output();
     let mut rgb_g = pins.rgb_g.into_push_pull_output();
     let mut rgb_b = pins.rgb_b.into_push_pull_output();
 
-    rgb_r.set_low().unwrap();
-    rgb_g.set_high().unwrap();
-    rgb_b.set_high().unwrap();
+    setup_user_led(&pins).unwrap();
 
-    let timer = Timer::new(pac.TIMER, &mut pac.RESETS);
-    let mut delay = timer.count_down();
-
-    // let mut i = 0;
-    // loop {
-    //     if i % 2 == 0 {
-    //         rgb_r.set_high().unwrap();
-    //     } else {
-    //         rgb_r.set_low().unwrap();
-    //     }
-    //     defmt::info!("tick {}", i);
-    //     i += 1;
-    //     delay.start(500.milliseconds());
-    //     let _ = nb::block!(delay.wait());
-    // }
-
-    let mut neopwr = pins.neopwr.into_push_pull_output();
-    neopwr.set_drive_strength(OutputDriveStrength::TwoMilliAmps);
-    neopwr.set_high().unwrap();
-
-    // Configure the addressable LED
-    let (mut pio, sm0, _, _, _) = pac.PIO0.split(&mut pac.RESETS);
-    let mut ws = Ws2812::new(
-        // The onboard NeoPixel is attached to GPIO pin #16 on the Feather RP2040.
-        pins.neopix.into_mode(),
-        &mut pio,
-        sm0,
-        clocks.peripheral_clock.freq(),
-        timer.count_down(),
-    );
-
-    // // Infinite colour wheel loop
-    let mut n: u16 = 65535 / 2;
     loop {
-        ws.write(brightness(once(wheel(n)), 32)).unwrap();
-        n = n.wrapping_add(1);
-
-        if n % 1000 == 0 {
-            defmt::info!("n = {}", n);
-        }
-
-        delay.start(1.milliseconds());
-        let _ = nb::block!(delay.wait());
+         
     }
 }
 
-/// Convert a number from `0..=255` to an RGB color triplet.
-///
-/// The colours are a transition from red, to green, to blue and back to red.
-fn wheel(mut wheel_pos: u16) -> RGB8 {
-    if wheel_pos < 21845 {
-        // No green in this sector - red and blue only
-        (((21845 - wheel_pos) / 86) as u8, 0, (wheel_pos / 86) as u8).into()
-    } else if wheel_pos < 43690 {
-        // No red in this sector - green and blue only
-        wheel_pos -= 21845;
-        (0, (wheel_pos / 86) as u8, ((21845 - wheel_pos) / 86) as u8).into()
-    } else {
-        // No blue in this sector - red and green only
-        wheel_pos -= 43690;
-        ((wheel_pos / 86) as u8, 255 - ((21845 - wheel_pos) / 86) as u8, 0).into()
-    }
+type GpioPin<A, B> = bsp::hal::gpio::pin::Pin<A, B>;
+
+fn pins<A: PinId, B: PinMode + ValidPinMode<A>>(r: &GpioPin<A, B>, g: &GpioPin<A, B>, b: &GpioPin<A, B>) {
+    setup_user_led(r.into_push_pull_output(), g.into_push_pull_output(), b.into_push_pull_output())?
+}
+
+fn setup_user_led<P, E>(mut r: P, mut g: P, mut b: P) -> Result<(), E>
+where
+    P: OutputPin<Error = E>,
+    E: From<Infallible>
+{
+    r.set_low()?;
+    g.set_high()?;
+    b.set_high()?;
+
+    Ok(())
 }
